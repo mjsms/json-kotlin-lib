@@ -22,6 +22,7 @@ This library was developed as part of an Advanced Programming course project. It
 ## 📦 Installation
 
 Clone the repository and include it in your Kotlin project. A release JAR will be available.
+
 ---
 
 ## 📚 Usage Example
