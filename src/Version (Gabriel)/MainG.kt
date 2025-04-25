@@ -1,10 +1,8 @@
-package `Version (Gabriel)`
-
 fun main() {
-    // Creating a JSON object like:
+    // Criar um objeto JSON equivalente a:
     // {
     //   "name": "Gabriel",
-    //   "age": 28,
+    //   "age": 30,
     //   "active": true,
     //   "skills": ["Kotlin", "Java"]
     // }
@@ -12,7 +10,7 @@ fun main() {
     val person = JsonObject(
         mapOf(
             "name" to JsonString("Gabriel"),
-            "age" to JsonNumber(28),
+            "age" to JsonNumber(30),
             "active" to JsonBoolean(true),
             "skills" to JsonArray(
                 listOf(
@@ -23,6 +21,6 @@ fun main() {
         )
     )
 
-    // Serialize the JSON object to a JSON-formatted string
+    // Serializa o objeto JSON para uma string no formato JSON
     println(person.toJson())
 }

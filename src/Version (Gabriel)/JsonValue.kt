@@ -1,43 +1,41 @@
-package `Version (Gabriel)`
-
-// Base sealed class for all JSON value types
+// Classe selada base para todos os tipos de valores JSON
 sealed class JsonValue {
-    // Each subclass must implement how it converts itself to a JSON string
+    // Cada subclasse deve implementar como se converte para uma string JSON
     abstract fun toJson(): String
 }
 
-// Represents a JSON string: e.g., "hello"
+// Representa uma string JSON: ex. "olá"
 data class JsonString(val value: String) : JsonValue() {
     override fun toJson() = "\"${value}\""
 }
 
-// Represents a JSON number: e.g., 42 or 3.14
+// Representa um número JSON: ex. 42 ou 3.14
 data class JsonNumber(val value: Number) : JsonValue() {
     override fun toJson() = value.toString()
 }
 
-// Represents a JSON boolean: true or false
+// Representa um valor booleano JSON: true ou false
 data class JsonBoolean(val value: Boolean) : JsonValue() {
     override fun toJson() = value.toString()
 }
 
-// Represents a JSON null
+// Representa um valor nulo JSON
 object JsonNull : JsonValue() {
     override fun toJson() = "null"
 }
 
-// Represents a JSON array: e.g., [1, "two", true]
+// Representa um array JSON: ex. [1, "dois", true]
 data class JsonArray(val items: List<JsonValue>) : JsonValue() {
 
-    // Converts each element to a JSON string and joins with commas inside brackets
+    // Converte cada elemento para JSON e junta tudo com vírgulas entre parênteses retos
     override fun toJson(): String =
         items.joinToString(prefix = "[", postfix = "]") { it.toJson() }
 }
 
-// Represents a JSON object: e.g., {"name": "Alice", "age": 30}
+// Representa um objeto JSON: ex. {"nome": "João", "idade": 25}
 data class JsonObject(val fields: Map<String, JsonValue>) : JsonValue() {
 
-    // Converts each key-value pair to a JSON string inside curly braces
+    // Converte cada par chave-valor para JSON, separado por vírgulas entre chavetas
     override fun toJson(): String =
         fields.entries.joinToString(prefix = "{", postfix = "}") { (key, value) ->
             "\"$key\": ${value.toJson()}"
