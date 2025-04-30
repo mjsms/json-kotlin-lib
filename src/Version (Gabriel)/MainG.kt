@@ -1,3 +1,5 @@
+//falta fazer as funções do Filter e do map
+
 fun main() {
     // Criar um objeto JSON equivalente a:
     // {
