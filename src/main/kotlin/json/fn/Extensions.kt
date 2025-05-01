@@ -1,6 +1,7 @@
-package model.fn
+package  json.fn
 
-import model.elements.*
+import  json.model.elements.*
+import json.visitor.JVisitor
 
 /* ───────────────────────────── filter / map ───────────────────────────── */
 
@@ -29,23 +30,6 @@ fun JArray.map(transform: (JValue) -> JValue): JArray =
     JArray(items.map(transform))
 
 /* ───────────────────────────── Visitor bridge ──────────────────────────── */
-
-/**
- * Base interface for the Visitor pattern.
- * You can extend this to implement validation, pretty-printing, searching,
- * or any other traversal-based feature.
- *
- * Primitive visit methods have default no-op implementations so that
- * a concrete visitor may override only what it needs.
- */
-interface JVisitor {
-    fun visit(value: JString)  { /* no-op */ }
-    fun visit(value: JNumber)  { /* no-op */ }
-    fun visit(value: JBoolean) { /* no-op */ }
-    fun visit(value: JNull)    { /* no-op */ }
-    fun visit(value: JArray)
-    fun visit(value: JObject)
-}
 
 /**
  * Extension function that enables `jsonValue.accept(visitor)` on *any*

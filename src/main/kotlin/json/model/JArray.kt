@@ -1,4 +1,4 @@
-package model.elements
+package json.model.elements
 
 /**
  * In-memory representation of a JSON array.

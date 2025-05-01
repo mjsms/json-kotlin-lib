@@ -1,4 +1,4 @@
-package model.elements
+package  json.model.elements
 
 /**
  * Root of the in-memory JSON hierarchy.
