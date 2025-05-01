@@ -4,6 +4,7 @@ import kotlin.test.*
 import json.model.elements.*
 import json.fn.accept
 import json.visitor.validators.KeyValidatorVisitor
+import org.junit.Test
 
 class TestKeyValidator {
 

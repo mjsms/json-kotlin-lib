@@ -2,6 +2,7 @@ package json
 
 import kotlin.test.*
 import json.model.elements.*
+import org.junit.Test
 
 class TestSerialization {
 
@@ -22,6 +23,6 @@ class TestSerialization {
             )
         )
         val out = jsonObj.toJson().replace(" ", "")
-        assertEquals("{"name":"Alice","age":30,"active":true,"tags":["kotlin","json"]}", out)
+        assertEquals("{\"name\":\"Alice\",\"age\":30,\"active\":true,\"tags\":[\"kotlin\",\"json\"]}", out)
     }
 }

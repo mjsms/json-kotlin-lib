@@ -1,9 +1,10 @@
 package json
 
-import kotlin.test.*
 import json.model.elements.*
 import json.fn.accept
 import json.visitor.validators.ArrayTypeValidatorVisitor
+import junit.framework.TestCase.assertTrue
+import org.junit.Test
 
 class TestArrayValidator {
 

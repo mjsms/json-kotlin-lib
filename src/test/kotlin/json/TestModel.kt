@@ -2,6 +2,7 @@ package json
 
 import kotlin.test.*
 import json.model.elements.*
+import org.junit.Test
 
 class TestModel {
 
@@ -12,7 +13,7 @@ class TestModel {
         val b = JBoolean(true)
         val nl = JNull
 
-        assertEquals(""hello"", s.toJson())
+        assertEquals("\"hello\"", s.toJson())
         assertEquals("42", n.toJson())
         assertEquals("true", b.toJson())
         assertEquals("null", nl.toJson())
@@ -23,8 +24,8 @@ class TestModel {
         val arr = JArray(listOf(JNumber(1), JNumber(2)))
         val obj = JObject(mapOf("a" to arr, "b" to JBoolean(false)))
 
-        assertEquals("[1,2]", arr.toJson())
-        assertTrue(obj.toJson().contains(""a":"))
-        assertTrue(obj.toJson().contains(""b": false"))
+        assertEquals("[1, 2]", arr.toJson())
+        assertTrue(obj.toJson().contains("\"a\":"))
+        assertTrue(obj.toJson().contains("\"b\": false"))
     }
 }

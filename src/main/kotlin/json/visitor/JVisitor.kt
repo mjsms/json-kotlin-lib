@@ -1,6 +1,6 @@
 package json.visitor
 
-import json.models.elements.*
+import json.model.elements.*
 
 /**
  * Base interface for the Visitor pattern over the JSON composite.
@@ -32,9 +32,6 @@ interface JVisitor {
 
     /* ────── composites (must be implemented) ────── */
 
-    /** Called for every [JArray] before its children are visited. */
-    fun visit(value: JArray)
-
-    /** Called for every [JObject] before its fields are visited. */
-    fun visit(value: JObject)
+    fun visit(value: JArray)   { /* no-op by default */ }
+    fun visit(value: JObject)  { /* no-op by default */ }
 }

@@ -3,6 +3,7 @@ package json
 import kotlin.test.*
 import json.model.elements.*
 import json.fn.*
+import org.junit.Test
 
 class TestFilterMap {
 
