@@ -9,15 +9,15 @@ fun main() {
     //   "skills": ["Kotlin", "Java"]
     // }
 
-    val person = JsonObject(
+    val person = JObject(
         mapOf(
-            "name" to JsonString("Gabriel"),
-            "age" to JsonNumber(30),
-            "active" to JsonBoolean(true),
-            "skills" to JsonArray(
+            "name" to JString("Gabriel"),
+            "age" to JNumber(30),
+            "active" to JBoolean(true),
+            "skills" to JArray(
                 listOf(
-                    JsonString("Kotlin"),
-                    JsonString("Java")
+                    JString("Kotlin"),
+                    JString("Java")
                 )
             )
         )

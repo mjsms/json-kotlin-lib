@@ -1,31 +1,31 @@
 // Classe selada base para todos os tipos de valores JSON
-sealed class JsonValue {
+sealed class JValue {
     // Cada subclasse deve implementar como se converte para uma string JSON
     abstract fun toJson(): String
 }
 
 // Representa uma string JSON: ex. "olá"
-data class JsonString(val value: String) : JsonValue() {
+data class JString(val value: String) : JValue() {
     override fun toJson() = "\"${value}\""
 }
 
 // Representa um número JSON: ex. 42 ou 3.14
-data class JsonNumber(val value: Number) : JsonValue() {
+data class JNumber(val value: Number) : JValue() {
     override fun toJson() = value.toString()
 }
 
 // Representa um valor booleano JSON: true ou false
-data class JsonBoolean(val value: Boolean) : JsonValue() {
+data class JBoolean(val value: Boolean) : JValue() {
     override fun toJson() = value.toString()
 }
 
 // Representa um valor nulo JSON
-object JsonNull : JsonValue() {
+object JNull : JValue() {
     override fun toJson() = "null"
 }
 
 // Representa um array JSON: ex. [1, "dois", true]
-data class JsonArray(val items: List<JsonValue>) : JsonValue() {
+data class JArray(val items: List<JValue>) : JValue() {
 
     // Converte cada elemento para JSON e junta tudo com vírgulas entre parênteses retos
     override fun toJson(): String =
@@ -33,7 +33,7 @@ data class JsonArray(val items: List<JsonValue>) : JsonValue() {
 }
 
 // Representa um objeto JSON: ex. {"nome": "João", "idade": 25}
-data class JsonObject(val fields: Map<String, JsonValue>) : JsonValue() {
+data class JObject(val fields: Map<String, JValue>) : JValue() {
 
     // Converte cada par chave-valor para JSON, separado por vírgulas entre chavetas
     override fun toJson(): String =
