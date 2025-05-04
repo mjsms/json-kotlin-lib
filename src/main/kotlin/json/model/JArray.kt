@@ -1,42 +1,31 @@
 package json.model.elements
 
+import json.visitor.JVisitor
+
 /**
  * In-memory representation of a JSON array.
  *
- * The class is _immutable_: its [items] list is a `List` rather than
+ * The class is _immutable_: its [elements] list is a `List` rather than
  * `MutableList`, so once a `JArray` is created the elements cannot be altered
  * in place (functional style).  Use the provided helper functions
  * – `plus`, `filter`, `map`, etc. – to derive new arrays.
  */
-data class JArray(val items: List<JValue>) : JValue(), Iterable<JValue> {
-
-    /* ─────────────────────────── Serialization ─────────────────────────── */
-
-    /** Serialises this array to valid JSON, e.g. `[1,"two",false]` */
-    override fun toJson(): String =
-        items.joinToString(prefix = "[", postfix = "]") { it.toJson() }
-
-    /* ─────────────────────────── Convenience API ───────────────────────── */
+data class JArray(val elements: List<JElement>) : JElement() {
 
     /** Number of elements (`size` for symmetry with Kotlin collections) */
-    val size: Int get() = items.size
+    val size: Int get() = elements.size
 
     /** Access element by index with the `[]` operator */
-    operator fun get(index: Int): JValue = items[index]
+    operator fun get(index: Int): JElement = elements[index]
 
     /**
-     * Functional `plus` – returns **new** `JArray` with [value] appended.
-     * (Does not mutate the original, preserving immutability.)
+     * Returns a [List] of all the [JElement]s contained in the array.
      */
-    operator fun plus(value: JValue): JArray =
-        JArray(items + value)
+    fun getElements(): List<JElement> = elements.toList()
 
-    /**
-     * Functional `plus` – concatenates two arrays.
-     */
-    operator fun plus(other: JArray): JArray =
-        JArray(items + other.items)
 
-    /** Allow `for (item in array)` iteration. */
-    override fun iterator(): Iterator<JValue> = items.iterator()
+    override fun accept(visitor: JVisitor) {
+        if (visitor.visit(this))
+            elements.forEach { it.accept(visitor) }
+    }
 }
