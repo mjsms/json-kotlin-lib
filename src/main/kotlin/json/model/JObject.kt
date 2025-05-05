@@ -3,75 +3,139 @@ package json.model.elements
 import json.visitor.JVisitor
 
 /**
- * JSON object.
- * @property properties A list of JSON properties, i.e. key-value pairs.
+ * In‑memory representation of a JSON object.
+ *
+ * Internally the key–value pairs are stored as a mutable list of [JProperty]
+ * to allow efficient updates, but callers interact with the object via an
+ * immutable facade (see [getProperties]) or with the convenience modifiers
+ * [addProperty], [setProperty] and [removeProperty].
+ *
+ * @constructor Builds a `JObject` with an initial [properties] list.
+ *              Each property’s [parent][JElement.parent] link is assigned to
+ *              this object so that upward navigation works.
+ * @param properties Mutable list of [JProperty] that make up the object.
+ *                   The list is **not** exposed directly; use the provided
+ *                   helpers to query or modify its contents.
  */
-data class JObject(private val properties: MutableList<JProperty>): JElement() {
+data class JObject(private val properties: MutableList<JProperty>) : JElement() {
+
+    /* ------------------------------------------------------------------ */
+    /*  Construction                                                      */
+    /* ------------------------------------------------------------------ */
 
     init {
+        // maintain parent back‑pointers
         properties.forEach { it.parent = this }
     }
 
+    /* ------------------------------------------------------------------ */
+    /*  Query helpers                                                     */
+    /* ------------------------------------------------------------------ */
+
     /**
-     * Returns a [List] of all the [JProperty]s of this object.
+     * Returns an **immutable snapshot** of the object’s properties.
+     *
+     * @return A new `List` containing all current [JProperty] instances.
+     *         Mutating the returned list does **not** affect this object.
      */
     fun getProperties(): List<JProperty> = properties.toList()
 
     /**
-     * Does the object have a [JProperty] with the given [key]?
-     * @param key The JSON property key.
-     * @return True if any of the object's properties match the given key; False, otherwise.
+     * Checks whether this object contains a property whose [JProperty.key]
+     * equals [key].
+     *
+     * @param key Property name to search for.
+     * @return `true` if such a property exists, `false` otherwise.
      */
-    fun hasProperty(key: String): Boolean = properties.any { it.key == key }
+    fun hasProperty(key: String): Boolean =
+        properties.any { it.key == key }
+
+    /* ------------------------------------------------------------------ */
+    /*  Modification helpers                                              */
+    /* ------------------------------------------------------------------ */
 
     /**
-     * Add a new [JProperty] to the object if the object has no existing property with the same [key].
-     * Otherwise, throws an [IllegalStateException].
-     * @param key The [JProperty] key.
-     * @param value The [JProperty] value.
-     * @throws IllegalStateException If the object already contains a property with the given key.
+     * Retrieves the value associated with the given [key].
+     *
+     * @param key Name of the property to fetch.
+     * @return The [JElement] stored under [key].
+     * @throws NoSuchElementException if no property with that key exists.
+     */
+    fun getProperty(key: String): JElement =
+        properties.first { it.key == key }.value
+
+    /**
+     * Adds a **new** property `[key] : [value]`.
+     *
+     * @throws IllegalStateException if a property with the same [key] is
+     *                               already present.
      */
     fun addProperty(key: String, value: JElement) {
-        if (hasProperty(key)) throw IllegalStateException("Property with key $key already exists")
-        val property = JProperty(key, value)
-        properties.add(property)
-        property.parent = this
+        require(!hasProperty(key)) { "Property \"$key\" already exists" }
+        val prop = JProperty(key, value).also { it.parent = this }
+        properties += prop
     }
 
     /**
-     * Returns the [Jelement] value of this object's [key] [JProperty].
-     * @param key The [JProperty] key.
-     */
-    fun getProperty(key: String): JElement = properties.first { it.key == key }.value
-
-    /**
-     * Sets a [JProperty] on this object. If the property with the given [key] is not present, it is added.
-     * @param key The [JProperty] key.
-     * @param value The [JProperty] value.
+     * Replaces the value of an existing property or appends a new one
+     * if the key is not present.
+     *
+     * @param key   The property name.
+     * @param value The new value to associate with [key].
      */
     fun setProperty(key: String, value: JElement) {
-        if (hasProperty(key)) {
-            val old = properties[properties.indexOfFirst { it.key == key }]
-            val new = JProperty(key, value)
-            new.parent = this
-            properties[properties.indexOfFirst { it.key == key }] = new
+        val idx = properties.indexOfFirst { it.key == key }
+        val newProp = JProperty(key, value).also { it.parent = this }
+        if (idx >= 0) {
+            properties[idx] = newProp         // update in place
+        } else {
+            properties += newProp             // add at the end
         }
-        else addProperty(key, value)
     }
 
     /**
-     * Removes the [JProperty] with the given [key].
-     * @param key The [JProperty] key.
+     * Removes the property whose key equals [key], if it exists.
+     * No action is taken when the key is absent.
+     *
+     * @param key The property name to remove.
      */
     fun removeProperty(key: String) {
-        if (!hasProperty(key)) return
-        val indexToRemove = properties.indexOfFirst { it.key == key }
-        val removed = properties[indexToRemove]
-        properties.removeAt(indexToRemove)
+        val idx = properties.indexOfFirst { it.key == key }
+        if (idx >= 0) properties.removeAt(idx)
     }
 
+    /* ------------------------------------------------------------------ */
+    /*  Serialisation                                                     */
+    /* ------------------------------------------------------------------ */
+
+    /**
+     * Pretty‑prints this object with tab indentation.
+     *
+     * Produces `{ }` for an empty object; otherwise prints each property on
+     * its own line at the correct depth.
+     */
+    override fun toString(): String =
+        if (properties.isEmpty()) "{ }"
+        else {
+            val indent = "\t".repeat(depth)
+            val inner  = properties.joinToString(",\n")
+            if (parent is JProperty)
+                "{\n$inner\n$indent}"
+            else
+                "$indent{\n$inner\n$indent}"
+        }
+
+    /* ------------------------------------------------------------------ */
+    /*  Visitor dispatch                                                  */
+    /* ------------------------------------------------------------------ */
+
+    /**
+     * Accepts a [JVisitor] and, if the visitor indicates so, forwards it to
+     * all child properties in depth‑first order.
+     */
     override fun accept(visitor: JVisitor) {
-        if (visitor.visit(this))
+        if (visitor.visit(this)) {
             properties.forEach { it.accept(visitor) }
+        }
     }
 }

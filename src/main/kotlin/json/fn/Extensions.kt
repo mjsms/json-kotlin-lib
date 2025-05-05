@@ -22,7 +22,7 @@ fun JObject.filter(predicate: (String, JElement) -> Boolean): JObject =
  * does not mutate the original list.
  */
 fun JArray.filter(predicate: (JElement) -> Boolean): JArray =
-    JArray(elements.filter(predicate))
+    JArray(getElements().filter(predicate))
 
 /**
  * Functional map for a [JArray].
@@ -30,5 +30,5 @@ fun JArray.filter(predicate: (JElement) -> Boolean): JArray =
  * `JArray` containing the results.
  */
 fun JArray.map(transform: (JElement) -> JElement): JArray =
-    JArray(elements.map(transform))
+    JArray(getElements().map(transform))
 
