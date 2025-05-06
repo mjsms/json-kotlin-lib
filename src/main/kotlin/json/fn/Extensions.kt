@@ -1,34 +1,48 @@
-package  json.fn
+package json.fn
 
-import  json.model.elements.*
+import json.model.elements.*
 
 /* ───────────────────────────── filter / map ───────────────────────────── */
 
 /**
- * Functional filter for a [JObject].
- * Returns a **new** object that contains only the fields for which
- * [predicate] returns `true`.  The original instance is left untouched.
+ * Returns a **new** [JObject] that contains only the properties for which
+ * [predicate] returns `true`.  The original object remains unchanged.
+ *
+ * We clone each matching [JProperty] so the original children keep their
+ * `parent` link and the copy gets its own.
  */
-fun JObject.filter(predicate: (String, JElement) -> Boolean): JObject =
-    JObject(
-        getProperties()
-            .filter { predicate(it.key, it.value) }
-            .toMutableList()
-    )
+fun JObject.filter(
+    predicate: (key: String, value: JElement) -> Boolean
+): JObject {
+    val clonedProps = getProperties()
+        .filter { predicate(it.key, it.value) }
+        .map { JProperty(it.key, it.value) }        // fresh instances
+        .toMutableList()
+
+    val newObj = JObject(clonedProps)
+    clonedProps.forEach { it.parent = newObj }      // set parent links
+    return newObj
+}
 
 /**
- * Functional filter for a [JArray].
- * Produces a **new** array with the elements that satisfy [predicate];
- * does not mutate the original list.
+ * Functional filter for a [JArray] that produces a new array.
+ * Parent links for retained elements are updated to the new array.
  */
-fun JArray.filter(predicate: (JElement) -> Boolean): JArray =
-    JArray(getElements().filter(predicate))
+fun JArray.filter(predicate: (JElement) -> Boolean): JArray {
+    val kept = getElements().filter(predicate)
+    val newArr = JArray(kept)
+    kept.forEach { it.parent = newArr }
+    return newArr
+}
 
 /**
  * Functional map for a [JArray].
- * Transforms every element with [transform] and returns a **new**
- * `JArray` containing the results.
+ * Applies [transform] to each element, returning a new `JArray`.
+ * Parent links for the transformed elements are set to the new array.
  */
-fun JArray.map(transform: (JElement) -> JElement): JArray =
-    JArray(getElements().map(transform))
-
+fun JArray.map(transform: (JElement) -> JElement): JArray {
+    val mapped = getElements().map(transform)
+    val newArr = JArray(mapped)
+    mapped.forEach { it.parent = newArr }
+    return newArr
+}

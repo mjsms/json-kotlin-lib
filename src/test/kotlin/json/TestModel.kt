@@ -124,7 +124,7 @@ class VisitorTests {
     fun `JSON Visitors`() {
         val collector = CollectByKey("name")
         validLibrary.accept(collector)
-        assertEquals(listOf("\"Afonso\"", "\"Andre Santos\"", "\"Gustavo\""), collector.collected.map { it.toString() })
+        assertEquals(listOf("\"Sapo\"", "\"Joaquim\"", "\"Larapo\""), collector.collected.map { it.toString() })
 
         val collector2 = CollectByKey("ThisKeyDoesNotExistAtAllAndItsSoLongThatItsGettingSilly")
         emptyJson.accept(collector2)

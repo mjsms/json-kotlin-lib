@@ -21,7 +21,7 @@ data class JString(val string: String) : JElement() {
      * @return A compact JSON‑compatible string, e.g. `"\t\"hello\""` when
      *         printed at depth 1.
      */
-    override fun toString(): String = nodeIdent(this) + "\"$string\""
+    override fun toString(): String =  nodeIdent(this) + '"' + string.escapeJson() + '"'
 
     /**
      * Dispatches this node to the supplied [visitor].
@@ -34,5 +34,27 @@ data class JString(val string: String) : JElement() {
      */
     override fun accept(visitor: JVisitor) {
         visitor.visit(this)
+    }
+
+
+    /* ------------------------------------------------------------------ */
+    /*  Private helper                                                    */
+    /* ------------------------------------------------------------------ */
+
+    /** Escapes JSON control characters and quotes. */
+    private fun String.escapeJson(): String = buildString {
+        for (c in this@escapeJson) when (c) {
+            '\\' -> append("\\\\")
+            '\"' -> append("\\\"")
+            '\b' -> append("\\b")
+            '\u000C' -> append("\\f")   // form‑feed
+            '\n' -> append("\\n")
+            '\r' -> append("\\r")
+            '\t' -> append("\\t")
+            // Any ISO control char < 0x20 that isn't handled above
+            in '\u0000'..'\u001F' ->
+                append("\\u%04X".format(c.code))
+            else -> append(c)
+        }
     }
 }
