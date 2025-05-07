@@ -21,7 +21,7 @@ import json.visitor.IAcceptVisitors
 sealed class JElement(internal var parent: JElement? = null) : IAcceptVisitors {
 
     /**
-     * Depth of this element in the tree (root = 0, its children = 1, …).
+     * Depth of this element in the tree (root=0, its children=1, …).
      *
      * * Starts at the parent’s depth and adds **1**.
      * * If the parent is a [JProperty], subtract **1** because a property is

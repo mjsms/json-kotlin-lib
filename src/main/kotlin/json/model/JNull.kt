@@ -10,7 +10,7 @@ import json.fn.nodeIdent
  * here it is a regular `class` to match the style of the other
  * `JElement` subclasses.
  */
-class JNull : JElement() {
+data object JNull : JElement() {
 
     /**
      * Serialises this node to the JSON text `"null"`, preceded by the
@@ -29,7 +29,4 @@ class JNull : JElement() {
         visitor.visit(this)
     }
 
-    override fun equals(other: Any?): Boolean = if (other == null) false else other is JNull
-
-    override fun hashCode(): Int = 0
 }
