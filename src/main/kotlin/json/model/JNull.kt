@@ -29,4 +29,7 @@ class JNull : JElement() {
         visitor.visit(this)
     }
 
+    override fun equals(other: Any?): Boolean = if (other == null) false else other is JNull
+
+    override fun hashCode(): Int = 0
 }
