@@ -1,13 +1,14 @@
 package main.kotlin.api.server
 
+import json.fn.toJson
 import main.kotlin.api.annotations.Mapping
 import main.kotlin.api.annotations.Param
 import main.kotlin.api.annotations.Path
-import java.lang.reflect.Method
 import java.net.URI
+import kotlin.reflect.KParameter
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.memberFunctions
-import kotlin.reflect.jvm.javaMethod
+import kotlin.reflect.jvm.jvmErasure
 
 class Router(controllers: List<Any>) {
     private val routes = mutableListOf<Route>()
@@ -17,116 +18,102 @@ class Router(controllers: List<Any>) {
     }
 
     private fun registerController(controller: Any) {
-        val controllerClass = controller::class
-        val controllerPath = controllerClass.findAnnotation<Mapping>()?.path ?: ""
-
-        controllerClass.memberFunctions.forEach { function ->
-            function.findAnnotation<Mapping>()?.let { mapping ->
-                val method = function.javaMethod ?: return@let
-                val fullPath = listOf(controllerPath, mapping.path)
+        val basePath = controller::class.findAnnotation<Mapping>()?.path?.trim('/') ?: ""
+        controller::class.memberFunctions.forEach { fn ->
+            fn.findAnnotation<Mapping>()?.let { mapping ->
+                val template = listOf(basePath, mapping.path.trim('/'))
                     .filter { it.isNotEmpty() }
                     .joinToString("/")
-                    .removePrefix("/")
-                    .removeSuffix("/")
 
-                val pathVariables = method.parameters
-                    .mapIndexedNotNull { index, param ->
-                        param.getAnnotation(Path::class.java)?.let { index }
-                    }
+                val pathVars = "\\{(\\w+)\\}".toRegex()
+                    .findAll(template)
+                    .map { it.groupValues[1] }
+                    .toList()
 
-                val queryParams = method.parameters
-                    .mapIndexedNotNull { index, param ->
-                        param.getAnnotation(Param::class.java)?.let {
-                            param.name to index
-                        }
-                    }
+                val queryVars = fn.parameters
+                    .filter { it.findAnnotation<Param>() != null }
+                    .mapNotNull { it.name }
+                    .toList()
 
-                routes.add(
-                    Route(
-                        path = fullPath,
-                        method = method,
-                        instance = controller,
-                        pathVariables = pathVariables,
-                        queryParams = queryParams.map { it.first }
-                    )
+                routes += Route(
+                    pathTemplate  = template,
+                    function      = fn,
+                    instance      = controller,
+                    pathVariables = pathVars,
+                    queryParams   = queryVars
                 )
             }
         }
     }
 
     fun handleRequest(uri: URI, httpMethod: String): String {
-        val path = uri.path.removePrefix("/").removeSuffix("/")
-        val query = uri.query
+        if (httpMethod != "GET") throw NotFoundException("Method not allowed")
 
-        val route = routes.find { it.match(path) }
+        val reqPath   = uri.path.trim('/')
+        val route     = routes.find { it.match(reqPath) }
             ?: throw NotFoundException("Route not found")
 
-        if (httpMethod != "GET") {
-            throw NotFoundException("Method not allowed")
-        }
+        val pathVals  = route.extractPathVariables(reqPath)
+        val queryVals = parseQueryParams(uri.query)
 
-        val pathVariables = route.extractPathVariables(path)
-        val queryParams = parseQueryParams(query)
+        // 1) Gero lista de args posicionais
+        val args = buildPositionalArgs(route, pathVals, queryVals)
 
-        val args = prepareArguments(route, pathVariables, queryParams)
+        // 2) Invoco com call
+        val result = route.function.call(*args.toTypedArray())
 
-        val result = route.method.invoke(route.instance, *args)
-        return toJsonString(result)
+        return toJson(result).toString()
     }
 
     private fun parseQueryParams(query: String?): Map<String, String> {
         if (query.isNullOrEmpty()) return emptyMap()
-
-        return query.split('&').associate {
-            val parts = it.split('=')
-            parts[0] to parts.getOrElse(1) { "" }
-        }
-    }
-
-    private fun prepareArguments(
-        route: Route,
-        pathVariables: Map<String, String>,
-        queryParams: Map<String, String>
-    ): Array<Any?> {
-        return route.method.parameters.mapIndexed { index, param ->
-            when {
-                param.getAnnotation(Path::class.java) != null -> {
-                    val varName = route.path.split('/')
-                        .find { it.startsWith('(') && it.endsWith(')') }
-                        ?.removeSurrounding("(", ")")
-                    pathVariables[varName]
+        return query.split('&').mapNotNull {
+            it.split('=', limit = 2).let { parts ->
+                parts.getOrNull(0)?.takeIf { it.isNotEmpty() }?.let { name ->
+                    name to parts.getOrElse(1) { "" }
                 }
-                param.getAnnotation(Param::class.java) != null -> {
-                    queryParams[param.name]
-                }
-                else -> null
-            }?.let { convertType(it, param.type) }
-        }.toTypedArray()
-    }
-
-    private fun convertType(value: String, type: Class<*>): Any {
-        return when (type) {
-            String::class.java -> value
-            Int::class.java -> value.toInt()
-            Double::class.java -> value.toDouble()
-            Boolean::class.java -> value.toBoolean()
-            else -> value
-        }
-    }
-
-    private fun toJsonString(obj: Any?): String {
-        // Usa sua biblioteca JSON existente para serialização
-        // Se você já tem uma função de serialização, use-a aqui
-        // Exemplo simplificado:
-        return when (obj) {
-            null -> "null"
-            is String -> "\"$obj\""
-            is Number, is Boolean -> obj.toString()
-            is Iterable<*> -> obj.joinToString(",", "[", "]") { toJsonString(it) }
-            is Map<*, *> -> obj.entries.joinToString(",", "{", "}") {
-                "\"${it.key}\":${toJsonString(it.value)}"
             }
-            else -> "\"$obj\""
+        }.toMap()
+    }
+
+    private fun buildPositionalArgs(
+        route: Route,
+        pathVars: Map<String, String>,
+        queryVars: Map<String, String>
+    ): List<Any?> {
+        val fn = route.function
+        val posArgs = mutableListOf<Any?>()
+
+        // primeiro o receiver / this
+        posArgs += route.instance
+
+        // depois cada parâmetro VALUE, na ordem declarada em `fn.parameters`
+        fn.parameters
+            .filter { it.kind == KParameter.Kind.VALUE }
+            .forEach { param ->
+                val raw = when {
+                    param.findAnnotation<Path>()  != null ->
+                        pathVars[param.name]
+
+                    param.findAnnotation<Param>() != null ->
+                        queryVars[param.name]
+
+                    else -> null
+                }
+                val converted = raw?.let { convertType(it, param.type) }
+                posArgs += converted
+            }
+
+        return posArgs
+    }
+
+    private fun convertType(value: String, type: kotlin.reflect.KType): Any {
+        return when (type.jvmErasure) {
+            String::class  -> value
+            Int::class     -> value.toInt()
+            Double::class  -> value.toDouble()
+            Boolean::class -> value.toBoolean()
+            else           -> throw IllegalArgumentException("Tipo não suportado: ${type.jvmErasure}")
         }
     }
 }

@@ -1,39 +1,31 @@
 package main.kotlin.api.server
 
-import java.lang.reflect.Method
-import kotlin.reflect.full.findAnnotation
-import kotlin.reflect.jvm.kotlinFunction
+import kotlin.reflect.KFunction
 
 data class Route(
-    val path: String,
-    val method: Method,
+    val pathTemplate: String,
+    val function: KFunction<*>,
     val instance: Any,
-    val pathVariables: List<Int> = emptyList(),
-    val queryParams: List<String> = emptyList()
+    val pathVariables: List<String>,  // nomes das variáveis {x}
+    val queryParams:   List<String>   // nomes dos parâmetros ?a=...&b=...
 ) {
     fun match(requestPath: String): Boolean {
-        val pathParts = path.split('/')
-        val requestParts = requestPath.split('/')
+        val tplParts = pathTemplate.split('/')
+        val reqParts = requestPath.split('/')
+        if (tplParts.size != reqParts.size) return false
 
-        if (pathParts.size != requestParts.size) return false
-
-        return pathParts.zip(requestParts).all { (routePart, requestPart) ->
-            routePart == requestPart || routePart.startsWith('(') && routePart.endsWith(')')
+        return tplParts.zip(reqParts).all { (tpl, actual) ->
+            tpl == actual || tpl.matches("\\{\\w+\\}".toRegex())
         }
     }
 
     fun extractPathVariables(requestPath: String): Map<String, String> {
-        val pathParts = path.split('/')
-        val requestParts = requestPath.split('/')
-        val variables = mutableMapOf<String, String>()
-
-        pathParts.forEachIndexed { index, part ->
-            if (part.startsWith('(') && part.endsWith(')')) {
-                val varName = part.removeSurrounding("(", ")")
-                variables[varName] = requestParts[index]
-            }
-        }
-
-        return variables
+        val tplParts = pathTemplate.split('/')
+        val reqParts = requestPath.split('/')
+        return tplParts.mapIndexedNotNull { idx, tpl ->
+            "\\{(\\w+)\\}".toRegex().matchEntire(tpl)
+                ?.groupValues?.get(1)
+                ?.let { name -> name to reqParts.getOrElse(idx) { "" } }
+        }.toMap()
     }
 }

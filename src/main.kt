@@ -1,26 +1,19 @@
+package json
+
 import main.kotlin.api.annotations.Mapping
 import main.kotlin.api.annotations.Param
 import main.kotlin.api.annotations.Path
 import main.kotlin.api.server.GetJson
 
 fun main() {
-    println("Iniciando servidor com os seguintes controllers:")
-    println("1. UserController endpoints:")
-    UserController::class.java.declaredMethods.forEach {
-        println("- ${it.annotations.filterIsInstance<Mapping>().firstOrNull()?.path}")
-    }
 
-    println("\n2. ProductController endpoints:")
-    ProductController::class.java.declaredMethods.forEach {
-        println("- ${it.annotations.filterIsInstance<Mapping>().firstOrNull()?.path}")
-    }
-
-    val app = GetJson(UserController(), ProductController())
+    val app = GetJson(UserController(), ProductController(), GenericController())
     app.start(8080)
 }
 
+
 @Mapping("health")
-fun healthCheck(): String = "Servidor está funcionando!"
+fun healthCheck(): String = "Servidor está a funcionar!"
 
 @Mapping("api/users")
 class UserController {
@@ -59,3 +52,25 @@ class ProductController {
 }
 
 data class User(val id: Int, val name: String)
+
+
+@Mapping("api/generic")
+class GenericController {
+    @Mapping("ints")
+    fun demo(): List<Int> = listOf(1, 2, 3)
+
+    @Mapping("pair")
+    fun obj(): Pair<String, String> = Pair("um", "dois")
+
+    @Mapping("path/{pathvar}")
+    fun path(
+        @Path pathvar: String
+    ): String = pathvar + "!"
+
+    @Mapping("args")
+    fun args(
+        @Param n: Int,
+        @Param text: String
+    ): Map<String, String> = mapOf(text to text.repeat(n))
+}
+

@@ -29,7 +29,7 @@ class KeyValidatorVisitorTest {
         /* Same visitor on a clean object must yield no errors. */
         val goodObj = JObject(mutableListOf(
             JProperty("a", JBoolean(true)),
-            JProperty("b", JNull())
+            JProperty("b", JNull)
         ))
         val v2 = KeyValidatorVisitor()
         goodObj.accept(v2)

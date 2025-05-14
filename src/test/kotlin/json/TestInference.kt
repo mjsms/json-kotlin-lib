@@ -3,7 +3,7 @@ import json.model.elements.*
 import json.fn.toJson
 import org.junit.Test
 
-enum class Grade { A, B, C }
+enum class Grade { A, B}
 
 data class Student(
     val name: String,
@@ -26,7 +26,7 @@ class InferenceTest {
         assertEquals(JNumber(42), toJson(42))
         assertEquals(JNumber(3.14), toJson(3.14))
         assertEquals(JBoolean(true), toJson(true))
-        assertEquals(JNull(), toJson(null))
+        assertEquals(JNull,toJson(null))
     }
 
     @Test

@@ -23,7 +23,7 @@ import kotlin.reflect.KVisibility
  * @throws IllegalArgumentException if a Map has a non-string key.
  */
 fun toJson(value: Any?): JElement = when (value) {
-    null -> JNull()
+    null -> JNull
     is String -> JString(value)
     is Int, is Double -> JNumber(value as Number)
     is Boolean -> JBoolean(value)
