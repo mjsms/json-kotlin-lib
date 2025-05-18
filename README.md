@@ -1,76 +1,104 @@
-
 # json-kotlin-lib
 
-A lightweight Kotlin library for generating, manipulating, and serializing JSON data **in-memory** without using any external dependencies (except JUnit for testing).
-
-This library was developed as part of an Advanced Programming course project. It integrates several software design patterns such as **Composite**, **Visitor**, **Functional API**, **Facade**, **Reflection**, **Annotations**, **Decorator**, and **Observer**.
-
-
-## 🚀 Features
-
-- ✅ Programmatic creation of JSON objects and arrays
-- ✅ In-memory model for JSON values (`objects`, `arrays`, `strings`, `numbers`, `booleans`, `null`)
-- ✅ Filter and map operations on `JsonObject` and `JsonArray`
-- ✅ Visitor pattern to validate JSON structure:
-  - Unique object keys
-  - Uniform types in arrays
-- ✅ String serialization into valid JSON
-- ✅ Reflection-based conversion from Kotlin objects
+A lightweight, zero‑dependency  Kotlin library that lets you **build, transform, validate and serve** JSON with an expressive DSL and a minimal HTTP layer.
 
 ---
 
-## 📦 Installation
+## ✨ Highlights
 
-Clone the repository and include it in your Kotlin project. A release JAR will be available.
+* **Fluent DSL** to construct JSON objects / arrays in code
+* **Immutable in‑memory model** (`JObject`, `JArray`, `JString`, `JNumber`, `JBoolean`, `JNull`)
+* **Functional ops**:`filter`, `map`, `flatMap`, `merge` on any node
+* **Visitor API** for custom traversals (validation, stats, pretty‑printing…)
+* **Reflection** helper `toJson(any)` → auto‑convert  data classes, lists, maps, enums
+* **Tiny HTTP server**(1 file, uses JDK `HttpServer`) + annotation‑based router
+* **Zero external runtime deps** (≈35KB jar)
 
 ---
 
-## 📚 Usage Example
+## 🏁 QuickStart
 
-### Creating JSON manually:
-
-```kotlin
-val json = Json.obj(
-    "name" to "Joana",
-    "age" to 25,
-    "tags" to Json.arr("gatos", "fotografia")
-)
-println(json.toJsonString())
-// Output: {"name":"Joana","age":25,"tags":["gatos","fotografia"]}
-```
-
-### Filtering and Mapping:
+### 1—Add the library
 
 ```kotlin
-val filtered = json.filter { key, _ -> key != "age" }
-val upperTags = (json["tags"] as JsonArray).map {
-    JsonString((it as JsonString).value.uppercase())
+repositories {
+    mavenCentral() // or local Maven if you build from source
+}
+
+dependencies {
+    implementation("com.github.mjsms:json‑kotlin‑lib:<version>")
 }
 ```
 
-### Using Reflection:
+### 2—Create JSON programmatically
 
 ```kotlin
-data class Person(val name: String, val age: Int)
-val p = Person("Joana", 25)
-val json = Json.from(p)
-println(json.toJsonString())
+val person = jsonObject {
+    "name" to "Alice"
+    "age"  to 30
+    "skills" to jsonArray("Kotlin", "Docker")
+}
+
+println(person) // {"name":"Alice","age":30,"skills":["Kotlin","Docker"]}
+```
+
+### 3 — Convert any Kotlin object
+
+```kotlin
+@Serializable // not required; works via reflection
+data class User(val id: Int, val name: String)
+
+val json = toJson(User(1, "Bob"))
+println(json) // {"id":1,"name":"Bob"}
+```
+
+### 4 — Expose a tiny REST endpoint
+
+```kotlin
+class HelloController {
+    @Mapping("/hello/{name}")
+    fun greet(@Path name: String) = jsonObject {
+        "message" to "Hello, $name!"
+    }
+}
+
+fun main() {
+    GetJson(port = 8080, controllers = listOf(HelloController()))
+}
+```
+
+Run → `curl http://localhost:8080/hello/Alice` → `{ "message": "Hello, Alice!" }`
+
+---
+
+## 📦 Building from source
+
+```bash
+git clone https://github.com/mjsms/json‑kotlin‑lib.git
+cd json‑kotlin‑lib
+./gradlew build  # creates build/libs/json‑kotlin‑lib‑<ver>.jar
+```
+
+Publish to local Maven (optional):
+
+```bash
+./gradlew publishToMavenLocal
 ```
 
 ---
 
-## 🛠️ Design Patterns Used
+## 🛠️ Architecture & Patterns
 
-- **Composite**: Unified hierarchy of JSON elements
-- **Visitor**: Structure validation and traversals
-- **Functional API**: Filter/map operations
-- **Facade**: Simplified creation API (`Json.obj`, `Json.arr`)
-- **Reflection**: Convert Kotlin objects to JSON
+| Pattern         | Where / Why                                                           |
+| --------------- | --------------------------------------------------------------------- |
+| **Composite**   | `JElement` sealed hierarchy gives a uniform tree API                  |
+| **Visitor**     | `JVisitor` enables pluggable traversals (validation, diff, stats)     |
+| **Facade**      | `jsonObject { … }`, `jsonArray()` builders hide implementation detail |
+| **Reflection**  | `toJson` inspects data classes, collections, maps                     |
+| **Annotations** | `@Mapping`, `@Path`, `@Param` drive the HTTP router                   |
 
 ---
 
 ## 📄 License
 
 This project is intended for academic use and is not licensed for production.
-
----
