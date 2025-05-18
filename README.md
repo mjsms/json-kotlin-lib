@@ -13,6 +13,45 @@ A lightweight, zero‑dependency  Kotlin library that lets you **build, transfor
 * **Reflection** helper `toJson(any)` → auto‑convert  data classes, lists, maps, enums
 * **Tiny HTTP server**(1 file, uses JDK `HttpServer`) + annotation‑based router
 * **Zero external runtime deps** (≈35KB jar)
+---
+
+
+```mermaid
+classDiagram
+    direction TB
+
+    class IAcceptVisitors
+    class JElement
+
+    class JObject {
+        - properties : List<JProperty>
+    }
+    class JArray {
+        - elements : List<JElement>
+    }
+    class JProperty {
+        - key   : String
+        - value : JElement
+    }
+    class JString
+    class JNumber
+    class JBoolean
+    class JNull
+
+    IAcceptVisitors <|.. JElement
+    JElement <|-- JObject
+    JElement <|-- JArray
+    JElement <|-- JProperty
+    JElement <|-- JString
+    JElement <|-- JNumber
+    JElement <|-- JBoolean
+    JElement <|-- JNull
+
+    JObject  "1" *-- "*" JProperty : properties
+    JArray   "1" *-- "*" JElement  : elements
+    JProperty "1" *-- "1" JElement : value
+
+```
 
 ---
 
