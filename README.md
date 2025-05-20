@@ -8,11 +8,9 @@ A lightweight, zero‑dependency  Kotlin library that lets you **build, transfor
 
 * **Fluent DSL** to construct JSON objects / arrays in code
 * **Immutable in‑memory model** (`JObject`, `JArray`, `JString`, `JNumber`, `JBoolean`, `JNull`)
-* **Functional ops**:`filter`, `map`, `flatMap`, `merge` on any node
-* **Visitor API** for custom traversals (validation, stats, pretty‑printing…)
+* **Functional ops**:`filter`, `map`  on any node
 * **Reflection** helper `toJson(any)` → auto‑convert  data classes, lists, maps, enums
 * **Tiny HTTP server**(1 file, uses JDK `HttpServer`) + annotation‑based router
-* **Zero external runtime deps** (≈35KB jar)
 ---
 
 
