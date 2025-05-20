@@ -15,16 +15,20 @@ repositories {
 dependencies {
     implementation(kotlin("reflect"))
     testImplementation(kotlin("test"))
+    // OkHttp para chamadas HTTP em testes ou produção
+    testImplementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+    // JUnit para testes
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.0")
 }
 
 /* ----------  ALINHAR AS DUAS COMPILAÇÕES  ---------- */
 
-// Kotlin → byte-code 17
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "21"
 }
 
-// Java → byte-code 17, mesmo usando JDK 23
 java {
     sourceCompatibility = JavaVersion.VERSION_21
     targetCompatibility  = JavaVersion.VERSION_21
