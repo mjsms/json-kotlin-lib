@@ -5,7 +5,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.junit.BeforeClass
 import org.junit.Test
-import json.main
+import json.startServer
 
 class GenericControllerIntegrationTest {
     companion object {
@@ -14,7 +14,7 @@ class GenericControllerIntegrationTest {
         @BeforeClass
         @JvmStatic
         fun setup() {
-            Thread { main() }.start()
+            Thread { startServer() }.start()
             Thread.sleep(500)
         }
     }
